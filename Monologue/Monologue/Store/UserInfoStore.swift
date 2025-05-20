@@ -31,6 +31,8 @@ class UserInfoStore: ObservableObject {
     @Published var memoCount: [String: Int] = [:] // 닉네임별 메모 개수 저장
     @Published var columnCount: [String: Int] = [:] // 닉네임별 칼럼 개수 저장
     
+    @Published var blockedUsers: [UserInfo] = []
+    
     private var listener: ListenerRegistration?
     
     // 로그인 시 사용자(닉네임, 가입날짜) 파베에 추가

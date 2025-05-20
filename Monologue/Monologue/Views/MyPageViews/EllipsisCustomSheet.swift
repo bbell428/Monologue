@@ -4,20 +4,6 @@
 //
 //  Created by Hyojeong on 10/18/24.
 //
-/*
- 사용처: 유저 프로필 뷰, 메모 및 칼럼 상세 뷰
- 커스텀 시트 설명:
- Image(systemName: "ellipsis") 버튼을 눌렀을 때 나오는 시트입니다.
- 
- 시트 내 사용하고자 하는 버튼의 이름은 SheetButtonOption의 type에 쓰고,
- 버튼의 액션은 SheetButtonOption의 action에 쓰면 됩니다.
- 
- sharedString은 공유하기 버튼(ShareLink)에 필요한 상수이기 때문에
- 공유하기 버튼을 쓰지 않는다면 nil로 써주시기 바랍니다.
- 
- sheet, alert 바인딩 값은 시트들을 올리고 내리기 위해 써준 것이므로
- 사용하지 않는 건 .constant(false)로 써주시면 됩니다...
- */
 
 import SwiftUI
 

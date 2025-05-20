@@ -9,8 +9,9 @@ import SwiftUI
 
 struct BlockedUsersListView: View {
     @EnvironmentObject var userInfoStore: UserInfoStore
+    @EnvironmentObject private var authManager: AuthManager
     @Environment(\.dismiss) private var dismiss
-    @State private var blockedUsers: [UserInfo] = []
+//    @State private var blockedUsers: [UserInfo] = []
     @State private var isActionActive = true // 차단 상태 관리
     
     @State private var memoCount: [String: Int] = [:] // 이메일별 메모 개수 저장
@@ -22,14 +23,14 @@ struct BlockedUsersListView: View {
                 .ignoresSafeArea()
             
             ScrollView {
-                if blockedUsers.isEmpty {
+                if userInfoStore.blockedUsers.isEmpty {
                     VStack {
                         Text("차단한 사용자가 없습니다.")
                             .padding(.top, 250)
                     }
                 } else {
                     VStack {
-                        ForEach(blockedUsers, id: \.self) { blockedUser in
+                        ForEach(userInfoStore.blockedUsers, id: \.self) { blockedUser in
                             NavigationLink {
                                 MyPageView(userInfo: blockedUser)
                             } label: {
@@ -45,12 +46,14 @@ struct BlockedUsersListView: View {
                                         // 차단 로직
                                         Task {
                                             try await userInfoStore.blockUser(blockedEmail: blockedUser.email)
+                                            await loadBlockedUsersAndCounts()
                                         }
                                     },
                                     onInactive: {
                                         // 차단 해제 로직
                                         Task {
                                             try await userInfoStore.unblockUser(blockedEmail: blockedUser.email)
+                                            await loadBlockedUsersAndCounts()
                                         }
                                     },
                                     isFollowAction: false
@@ -80,6 +83,9 @@ struct BlockedUsersListView: View {
         .onAppear {
             Task {
                 await loadBlockedUsersAndCounts()
+                await userInfoStore.loadUserInfo(email: authManager.email)
+                
+                await userInfoStore.blockedUsers = try userInfoStore.loadUsersInfoByEmail(emails: userInfoStore.userInfo?.blocked ?? [])
             }
         }
     }
@@ -88,10 +94,11 @@ struct BlockedUsersListView: View {
     private func loadBlockedUsersAndCounts() async {
         if let userInfo = userInfoStore.userInfo {
             do {
-                blockedUsers = try await userInfoStore.loadUsersInfoByEmail(emails: userInfo.blocked)
+                userInfoStore.blockedUsers = try await userInfoStore.loadUsersInfoByEmail(emails: userInfo.blocked)
                 
-                for blockedUser in blockedUsers {
+                for blockedUser in userInfoStore.blockedUsers {
                     memoCount[blockedUser.email] = try await userInfoStore.getMemoCount(email: blockedUser.email)
+                    print("\(blockedUser.email)")
                     columnCount[blockedUser.email] = try await userInfoStore.getColumnCount(email: blockedUser.email)
                 }
             } catch {

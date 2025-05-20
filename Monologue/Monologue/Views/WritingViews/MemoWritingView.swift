@@ -9,7 +9,7 @@ import SwiftUI
 
 
 struct MemoWritingView: View {
-
+    
     
     @Binding var memoText: String
     @Binding var selectedFont: String
@@ -39,61 +39,90 @@ struct MemoWritingView: View {
     
     let lineHeight: CGFloat = 24
     
+    
+    @State private var showImagePicker = false // 이미지 선택 Sheet 표시 여부
+    @State private var uploadedImage: UIImage? // 업로드된 이미지를 저장
+    
+    @Binding var textSize: CGFloat
+    @Binding var textColor: Color
+    
     var body: some View {
         VStack {
             VStack {
                 ZStack {
-                    Image(selectedBackgroundImageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: .infinity, maxHeight: 500)
-                        .cornerRadius(8)
-                        .clipped()
-                        .overlay(alignment: .topLeading) {
-                            GeometryReader { geometry in
-                                CropBox(rect: $cropArea, text: $memoText, selectedFont: $selectedFont, placeholder: placeholder)
-                                    .focused($isTextEditorFocused)
-                                    .onReceive(memoText.publisher.collect()) { newValue in
-                                        if newValue.count > textLimit {
-                                            memoText = String(newValue.prefix(textLimit))
+                    if let image = UIImage(contentsOfFile: selectedBackgroundImageName) { // 파일 경로에서 이미지 로드
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: 500)
+                            .cornerRadius(8)
+                            .clipped()
+                            .overlay(alignment: .topLeading) {
+                                GeometryReader { geometry in
+                                    CropBox(rect: $cropArea, text: $memoText, selectedFont: $selectedFont, placeholder: placeholder, textSize: $textSize, textColor: $textColor)
+                                        .focused($isTextEditorFocused)
+                                        .onReceive(memoText.publisher.collect()) { newValue in
+                                            if newValue.count > textLimit {
+                                                memoText = String(newValue.prefix(textLimit))
+                                            }
                                         }
-                                    }
-                                    .onAppear {
-                                        self.imageViewSize = geometry.size
-                                    }
-                                    .onChange(of: geometry.size) {
-                                        self.imageViewSize = $0
-                                    }
+                                        .onAppear {
+                                            self.imageViewSize = geometry.size
+                                        }
+                                        .onChange(of: geometry.size) {
+                                            self.imageViewSize = $0
+                                        }
+                                }
                             }
-                        }
-                        .overlay (
-                            Rectangle()
-                                .stroke(Color.gray, lineWidth: 3)
-                        )
-                    
-                    //                            GeometryReader { geometry in
-                    //                                TextEditor(text: $memoText)
-                    //                                    .font(.custom(selectedFont, size: 20))
-                    //                                    .scrollContentBackground(.hidden)
-                    //                                    //.background(Color.white.opacity(0.8))
-                    //                                    .frame(maxWidth: .infinity, maxHeight: 500)
-                    //                                    .cornerRadius(8)
-                    //                                    .focused($isTextEditorFocused) // TextEditor에 포커스 상태 연결
-                    //                                    .overlay {
-                    //                                        Text(placeholder)
-                    //                                            .font(.title2)
-                    //                                            .foregroundColor(memoText.isEmpty ? .gray : .clear)
-                    //                                    }
-                    //                                    .onChange(of: memoText) { _ in
-                    //                                        let editWidth = geometry.size.width
-                    //                                        calculateLineCount(in: editWidth)
-                    //                                    }
-                    //                            }
+                            .overlay (
+                                Rectangle()
+                                    .stroke(Color.gray, lineWidth: 3)
+                            )
+                    } else {
+                        Image(selectedBackgroundImageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: 500)
+                            .cornerRadius(8)
+                            .clipped()
+                            .overlay(alignment: .topLeading) {
+                                GeometryReader { geometry in
+                                    CropBox(rect: $cropArea, text: $memoText, selectedFont: $selectedFont, placeholder: placeholder, textSize: $textSize, textColor: $textColor)
+                                        .focused($isTextEditorFocused)
+                                        .onReceive(memoText.publisher.collect()) { newValue in
+                                            if newValue.count > textLimit {
+                                                memoText = String(newValue.prefix(textLimit))
+                                            }
+                                        }
+                                        .onAppear {
+                                            self.imageViewSize = geometry.size
+                                        }
+                                        .onChange(of: geometry.size) {
+                                            self.imageViewSize = $0
+                                        }
+                                }
+                            }
+                            .overlay (
+                                Rectangle()
+                                    .stroke(Color.gray, lineWidth: 3)
+                            )
+                    }
                 }
+                
             }
             .padding(.horizontal, 16)
             
             HStack {
+                HStack(spacing: 8) {
+                    ForEach([Color.black ,Color.red, Color.green, Color.blue, Color.orange, Color.purple], id: \.self) { color in
+                            Circle()
+                                .fill(color)
+                                .frame(width: 18, height: 18)
+                                .onTapGesture {
+                                    textColor = color // 선택한 색상으로 텍스트 색상 변경
+                                }
+                        }
+                    }
                 Spacer()
                 Text("\(memoText.count)/500")
                     .font(.subheadline)
@@ -101,6 +130,30 @@ struct MemoWritingView: View {
             }
             .padding(.bottom)
             .padding(.horizontal, 16)
+            
+            HStack(spacing: 10) {
+                Image(systemName: "textformat.size")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .foregroundStyle(Color.accent)
+                
+                Text("크기")
+                    .font(.system(size: 15, weight: .light))
+                    .foregroundStyle(Color.accent)
+                
+                Slider(value: $textSize, in: 1...50, step: 1) {
+                    Text("텍스트 크기 조절 슬라이더")
+                }
+                
+                Text("\(Int(textSize))")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Color.accent)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            
+            Divider()
             
             HStack {
                 HStack(spacing: 10) {
@@ -127,6 +180,14 @@ struct MemoWritingView: View {
                 }
             }
             .padding(.leading, 16)
+            .sheet(isPresented: $showImagePicker) {
+                ImagePicker(selectedImage: $uploadedImage) // ImagePicker 호출
+            }
+            .onChange(of: uploadedImage) { newImage in
+                if let image = newImage {
+                    applyUploadedImage(image)
+                }
+            }
             
             Divider()
             
@@ -136,9 +197,26 @@ struct MemoWritingView: View {
                         .resizable()
                         .frame(width: 20, height: 20)
                         .foregroundStyle(Color.accent)
+                    
                     Text("배경")
                         .font(.system(size: 15))
                         .foregroundStyle(Color.accent)
+                    
+                    // 사진 업로드 버튼
+                    Button(action: {
+                        showImagePicker = true // Sheet 열기
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 20))
+                            .frame(width: 30, height: 30)
+                            .background(Color.background)
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.brown, lineWidth: 1) // 테두리 추가
+                            )
+                    }
+                    
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHGrid(rows: rows, spacing: 10) {
                             ForEach(backgroundImageNames, id: \.self) { imageName in
@@ -154,6 +232,14 @@ struct MemoWritingView: View {
                 }
             }
             .padding(.leading, 16)
+            .sheet(isPresented: $showImagePicker) {
+                ImagePicker(selectedImage: $uploadedImage)
+            }
+            .onChange(of: uploadedImage) { newImage in
+                if let image = newImage {
+                    applyUploadedImage(image) // 업로드된 이미지를 처리
+                }
+            }
             
             Divider()
             HStack {
@@ -225,6 +311,21 @@ struct MemoWritingView: View {
         ]
         let textHeight = (memoText as NSString).boundingRect(with: size, options: [.usesLineFragmentOrigin], attributes: attributes, context: nil).height
         lineCount = Int(ceil(textHeight / lineHeight))
+    }
+    
+    private func applyUploadedImage(_ image: UIImage) {
+        // 이미지를 로컬 파일로 저장
+        if let data = image.jpegData(compressionQuality: 0.8) {
+            let filename = UUID().uuidString + ".jpg" // 고유 파일명 생성
+            let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+            
+            do {
+                try data.write(to: fileURL) // 파일 시스템에 저장
+                selectedBackgroundImageName = fileURL.path // 경로를 selectedBackgroundImageName에 저장
+            } catch {
+                print("Error saving image: \(error)")
+            }
+        }
     }
 }
 
@@ -308,3 +409,43 @@ struct CategoryMemoButton: View {
 //#Preview {
 //    MemoWritingView(text: .constant(""), selectedFont: .constant("기본서체"), selectedMemoCategories: .constant([]), selectedBackgroundImageName: .constant("jery1"), lineCount: .constant(5))
 //}
+
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var selectedImage: UIImage? // 선택된 이미지를 바인딩
+    @Environment(\.presentationMode) private var presentationMode
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        picker.sourceType = .photoLibrary // 사진 라이브러리 사용
+        picker.allowsEditing = true // 사진 편집 허용
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: ImagePicker
+        
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+        
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let editedImage = info[.editedImage] as? UIImage {
+                parent.selectedImage = editedImage
+            } else if let originalImage = info[.originalImage] as? UIImage {
+                parent.selectedImage = originalImage
+            }
+            parent.presentationMode.wrappedValue.dismiss() // 선택 후 닫기
+        }
+        
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.presentationMode.wrappedValue.dismiss() // 취소 시 닫기
+        }
+    }
+}

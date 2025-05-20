@@ -57,9 +57,10 @@ struct MainView: View {
             Task {
                 if authManager.email != "" {
                     await userInfoStore.loadUserInfo(email: authManager.email)
-                    await userInfoStore.loadFollowersAndFollowings(for: userInfoStore.userInfo!)
+                    if let userInfo = userInfoStore.userInfo {
+                        await userInfoStore.loadFollowersAndFollowings(for: userInfo)
+                    }
                 }
-                
             }
             setupNavigationBarAppearance()
         }

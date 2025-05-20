@@ -19,19 +19,25 @@ struct CropBox: View {
     @State private var draggedCorner: UIRectCorner? = nil
     
     let lineHeight: CGFloat = 24
+    @Binding var textSize: CGFloat
+    @Binding var textColor: Color
     
     public init(
         rect: Binding<CGRect>,
         text: Binding<String>,
         minSize: CGSize = .init(width: 100, height: 100),
         selectedFont: Binding<String>,
-        placeholder: String
+        placeholder: String,
+        textSize: Binding<CGFloat>,
+        textColor: Binding<Color>
     ) {
         self._rect = rect
         self._text = text
         self.minSize = minSize
         self._selectedFont = selectedFont
         self.placeholder = placeholder
+        self._textSize = textSize
+        self._textColor = textColor
     }
     
     private var rectDrag: some Gesture {
@@ -68,7 +74,8 @@ struct CropBox: View {
             blur
             box
             TextEditor(text: $text) // Add TextEditor for text input
-                .font(.custom(selectedFont, size: 17))
+                .foregroundStyle(textColor)
+                .font(.custom(selectedFont, size: textSize))
                 .frame(width: rect.width - 10, height: rect.height - 10)
                 .background(Color.clear)
                 .border(Color.blue, width: 1)
@@ -245,7 +252,7 @@ struct CropBox: View {
     private func calculateLineCount(in width: CGFloat) -> Int {
         let size = CGSize(width: width, height: .infinity)
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont(name: selectedFont, size: 17) ?? UIFont.systemFont(ofSize: 17)
+            .font: UIFont(name: selectedFont, size: textSize) ?? UIFont.systemFont(ofSize: textSize)
         ]
         let textHeight = (text as NSString).boundingRect(with: size, options: [.usesLineFragmentOrigin], attributes: attributes, context: nil).height
         

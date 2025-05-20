@@ -34,7 +34,10 @@ struct PostView: View {
     
     @State var cropArea: CGRect = .init(x: 0, y: 0, width: 100, height: 100)
     @State var imageViewSize: CGSize = .zero
-    @State var croppedImage: UIImage?    
+    @State var croppedImage: UIImage?
+    
+    @State var textSize: CGFloat = 17
+    @State private var textColor: Color = .black
     
     var body: some View {
         ZStack {
@@ -123,7 +126,7 @@ struct PostView: View {
                 
                 ScrollView {
                     if selectedSegment == "메모" {
-                        MemoWritingView(memoText: $memoText, selectedFont: $selectedFont, selectedMemoCategories: $selectedMemoCategories, selectedBackgroundImageName: $selectedBackgroundImageName, lineCount: $lineCount, cropArea: $cropArea, imageViewSize: $imageViewSize)
+                        MemoWritingView(memoText: $memoText, selectedFont: $selectedFont, selectedMemoCategories: $selectedMemoCategories, selectedBackgroundImageName: $selectedBackgroundImageName, lineCount: $lineCount, cropArea: $cropArea, imageViewSize: $imageViewSize, textSize: $textSize, textColor: $textColor)
                             .padding(.top, 10)
                     } else if selectedSegment == "칼럼" {
                         ColumnWritingView(title: $title, columnText: $columnText, selectedColumnCategories: $selectedColumnCategories)
@@ -200,10 +203,10 @@ struct PostView: View {
         return renderer.image { context in
             croppedImage.draw(at: .zero)
             
-            let fontSize: CGFloat = 20
+            let fontSize: CGFloat = textSize
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: UIFont(name: selectedFont, size: fontSize) ?? UIFont.systemFont(ofSize: fontSize),
-                .foregroundColor: UIColor.black
+                .foregroundColor: UIColor(textColor)
             ]
             
             let textRect = CGRect(
